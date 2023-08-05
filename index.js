@@ -11,26 +11,8 @@ app.use(cors());
 
 app.use(express.json());
 
-app.get("/getRoles", async (req, res) => {
-  try {
-    console.log("Headers:", req.headers); // Log headers
-    const token = req.headers.authorization;
 
-    const response = await axios.get(
-      `${process.env.REST_BASE_URI}platform/v1/setup/quickflow/data`,
-      {
-        headers: { Authorization: `${token}` },
-      }
-    );
-    console.log("Third-Party API Response:", response.data);
-    console.log("Roles Response:", response.data.roles); // Log response data
-    res.status(200).json(response.data.roles);
-  } catch (error) {
-    // console.error("Axios Error:", error:response ? error.response.data: error);
-    res.status(500).json({ message: "Failed to get roles" });
-  }
-});
-
+// authentication
 app.post("/authenticate", async (req, res) => {
   const { client_id, client_secret, account_id } = req.body;
 
@@ -80,6 +62,28 @@ app.post("/authenticate", async (req, res) => {
   }
 });
 
+// role assign
+app.get("/getRoles", async (req, res) => {
+  try {
+    console.log("Headers:", req.headers); // Log headers
+    const token = req.headers.authorization;
+
+    const response = await axios.get(
+      `${process.env.REST_BASE_URI}platform/v1/setup/quickflow/data`,
+      {
+        headers: { Authorization: `${token}` },
+      }
+    );
+    console.log("Third-Party API Response:", response.data);
+    console.log("Roles Response:", response.data.roles); // Log response data
+    res.status(200).json(response.data.roles);
+  } catch (error) {
+    // console.error("Axios Error:", error:response ? error.response.data: error);
+    res.status(500).json({ message: "Failed to get roles" });
+  }
+});
+
+// creating user
 app.post("/createUser", async (req, res) => {
   let xml; // Declare xml variable outside the try block
   try {
