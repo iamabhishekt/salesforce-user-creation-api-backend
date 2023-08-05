@@ -1,16 +1,18 @@
 require("dotenv").config();
 const express = require("express");
 const axios = require("axios");
-const app = express();
+const bodyParser = require('body-parser');
 const port = process.env.PORT || 3001;
 const xml2js = require("xml2js");
+const app = express();
 const builder = new xml2js.Builder();
 const cors = require("cors");
+
+app.use(bodyParser.json());
 
 app.use(cors());
 
 app.use(express.json());
-
 
 // authentication
 app.post("/authenticate", async (req, res) => {
@@ -83,22 +85,26 @@ app.get("/getRoles", async (req, res) => {
   }
 });
 
-// creating user
+
+// User Creation
+
 app.post("/createUser", async (req, res) => {
   let xml; // Declare xml variable outside the try block
   try {
-    const { token, userDetails, selectedRole } = req.body;
-
+    const { token, userDetails, Role } = req.body;
+    console.log("Received User Details: ", userDetails);
+    console.log("Selected Role: ", Role);
     const userXML = {
       "s:Envelope": {
         $: {
           "xmlns:s": "http://www.w3.org/2003/05/soap-envelope",
           "xmlns:a": "http://schemas.xmlsoap.org/ws/2004/08/addressing",
-          "xmlns:u":
-            "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd",
+          "xmlns:u": "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd",
+          "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+          "xmlns:xsd": "http://www.w3.org/2001/XMLSchema",
         },
         "s:Header": {
-          "a:Action": { _: "Update", $: { "s:mustUnderstand": "1" } },
+          "a:Action": { _: "Create", $: { "s:mustUnderstand": "1" } },
           "a:To": {
             _: process.env.SOAP_BASE_URI + "Service.asmx",
             $: { "s:mustUnderstand": "1" },
@@ -133,7 +139,7 @@ app.post("/createUser", async (req, res) => {
               DefaultBusinessUnit: userDetails.defaultBusinessUnit,
               Roles: {
                 Role: {
-                  ObjectID: selectedRole,
+                  ObjectID: Role,
                 },
               },
             },
@@ -142,35 +148,40 @@ app.post("/createUser", async (req, res) => {
       },
     };
 
-    const xml = builder.buildObject(userXML);
+    xml = builder.buildObject(userXML);
+    console.log('XML Request:', xml); // Log the XML request
 
     const response = await axios.post(
       process.env.SOAP_BASE_URI + "Service.asmx",
       xml,
       {
         headers: {
-          "Content-Type": "application/soap+xml; charset=utf-8",
-          Authorization: `${token}`,
+          "Content-Type": "text/xml; charset=utf-8",
+          // Authorization: `${token}`,
+          // SOAPAction: Create,
         },
       }
     );
 
+    console.log('SOAP Response:', response.data); // Log the SOAP response
     res.status(200).json(response.data);
   } catch (error) {
-    console.error('Error:', error.message);
-    if (xml) { // Make sure xml is defined before trying to log it
-      console.log('XML Payload:', xml);
+    console.error("Error:", error.message);
+    if (xml) {
+      // Make sure xml is defined before trying to log it
+      console.log("XML Payload:", xml);
     }
     if (error.response) {
-      console.log('SOAP Response:', error.response.data); // Log error.response.data instead of response.data
-      console.log('Received User Details:', req.body.userDetails, 'Selected Role:', req.body.selectedRole);
-      console.error('Error Data:', error.response.data);
-      console.error('Response status:', error.response.status);
-      console.error('Response headers:', error.response.headers);
+      console.log("SOAP Response:", error.response.data);
+      console.error("Error Data:", error.response.data);
+      console.error("Response status:", error.response.status);
+      console.error("Response headers:", error.response.headers);
     }
     res.status(500).json({ message: "Failed to create user" });
   }
 });
+
+
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
