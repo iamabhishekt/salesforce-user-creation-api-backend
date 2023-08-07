@@ -1,7 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const axios = require("axios");
-const bodyParser = require("body-parser");
+const bodyParser = require('body-parser');
 const port = process.env.PORT || 3001;
 const xml2js = require("xml2js");
 const app = express();
@@ -85,6 +85,7 @@ app.get("/getRoles", async (req, res) => {
   }
 });
 
+
 // User Creation
 
 app.post("/createUser", async (req, res) => {
@@ -98,8 +99,7 @@ app.post("/createUser", async (req, res) => {
         $: {
           "xmlns:s": "http://www.w3.org/2003/05/soap-envelope",
           "xmlns:a": "http://schemas.xmlsoap.org/ws/2004/08/addressing",
-          "xmlns:u":
-            "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd",
+          "xmlns:u": "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd",
           "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
           "xmlns:xsd": "http://www.w3.org/2001/XMLSchema",
         },
@@ -149,7 +149,7 @@ app.post("/createUser", async (req, res) => {
     };
 
     xml = builder.buildObject(userXML);
-    console.log("XML Request:", xml); // Log the XML request
+    console.log('XML Request:', xml); // Log the XML request
 
     const response = await axios.post(
       process.env.SOAP_BASE_URI + "Service.asmx",
@@ -163,41 +163,14 @@ app.post("/createUser", async (req, res) => {
       }
     );
 
-    console.log("SOAP Response:", response.data); // Log the SOAP response
+    console.log('SOAP Response:', response.data); // Log the SOAP response
     res.status(200).json(response.data);
-
-    // Parse the XML response to JSON
-    xml2js.parseString(response.data, (err, result) => {
-      if (err) {
-        console.error("Error parsing XML:", err);
-        return res
-          .status(500)
-          .json({ message: "Failed to parse XML response" });
-      }
-
-      // Extract the StatusMessage from the parsed JSON
-      const statusMessage =
-        result["soap:Envelope"]["soap:Body"][0]["CreateResponse"][0][
-          "Results"
-        ][0]["StatusMessage"][0];
-      console.log("StatusMessage:", statusMessage);
-
-      // Send the StatusMessage in the response
-      res.status(200).json({ statusMessage });
-    });
   } catch (error) {
     console.error("Error:", error.message);
     if (xml) {
       console.log("XML Payload:", xml);
     }
     if (error.response) {
-      // Parse the XML error response to extract the StatusMessage
-      xml2js.parseString(error.response.data, (err, result) => {
-        if (!err) {
-          const statusMessage = result['soap:Envelope']['soap:Body'][0]['CreateResponse'][0]['Results'][0]['StatusMessage'][0];
-          return res.status(500).json({ message: statusMessage });
-        }
-      });
       console.log("SOAP Response:", error.response.data);
       console.error("Error Data:", error.response.data);
       console.error("Response status:", error.response.status);
@@ -207,7 +180,9 @@ app.post("/createUser", async (req, res) => {
   }
 });
 
+
+
 app.listen(port, () => {
   // console.log(`Server running on http://localhost:${port}`);
-  console.log(`Server running!`);
+  console.log(`Server running`);
 });
