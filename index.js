@@ -168,7 +168,6 @@ app.post("/createUser", async (req, res) => {
   } catch (error) {
     console.error("Error:", error.message);
     if (xml) {
-      // Make sure xml is defined before trying to log it
       console.log("XML Payload:", xml);
     }
     if (error.response) {
@@ -184,5 +183,6 @@ app.post("/createUser", async (req, res) => {
 
 
 app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
+  // console.log(`Server running on http://localhost:${port}`);
+  console.log(`Server running!`);
 });
